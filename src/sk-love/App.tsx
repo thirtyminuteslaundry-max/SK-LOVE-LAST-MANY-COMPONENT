@@ -15370,7 +15370,7 @@ const [isPartyGiftPopupOpen, setIsPartyGiftPopupOpen] = useState<boolean>(false)
     currentUserId={getCurrentUserId()}
     currentUser={{ name: registerName, avatar: profileAvatarImg }}
     isHost={isActivePartyHost}
-    onToggleMic={() => setIsPartyMicMuted(!isPartyMicMuted)}
+    onToggleMic={() => void toggleSelfMute()}
     onBack={() => {
       if (isPartyRoomOpen) {
         closeActivePartyRoom();
@@ -15384,9 +15384,11 @@ const [isPartyGiftPopupOpen, setIsPartyGiftPopupOpen] = useState<boolean>(false)
     onLeaveRoom={() => {
       closeActivePartyRoom();
     }}
-    onCreateRoom={() => {
-      createBackendPartyRoom();
+    onCreateRoom={(roomData) => {
+      createBackendPartyRoom(roomData?.privacy, roomData?.seatsCount);
     }}
+    onJoinSeat={(seatIdx) => void handleSeatClick(seatIdx)}
+    onLeaveSeat={(seatIdx) => void handleSeatClick(seatIdx)}
     onMuteSeat={(seatIdx, muted) => handlePartySeatMute(seatIdx, muted)}
     onKickSeat={(seatIdx) => handleKickSeat(seatIdx)}
     onOpenGiftPicker={(recipient) => {
@@ -15395,10 +15397,28 @@ const [isPartyGiftPopupOpen, setIsPartyGiftPopupOpen] = useState<boolean>(false)
     }}
     onOpenGameLauncher={() => setIsLiveGamesPopupOpen(true)}
     onOpenProfile={(u) => openPartyProfile(u)}
-    onSendChat={(msg) => {
-      if (activePartyRoom?.id) {
-        void api.post(`/api/party-rooms/${activePartyRoom.id}/chat`, { text: msg }).catch(() => undefined);
+    onSelectTheme={(themeUrl) => {
+      setEquippedPartyTheme(themeUrl);
+      if (isActivePartyHost && activePartyRoom?.id) {
+        void api.post(`/api/party-rooms/${activePartyRoom.id}/chat`, { text: `[THEME:${themeUrl}] Room theme updated` }).catch(() => undefined);
       }
+    }}
+    onSendChat={(msg) => {
+      if (!msg.trim() || !activePartyRoom?.id) return;
+      const body = msg.trim();
+      const optimMsg: PartyChatMsg = {
+        id: -(Date.now() + Math.floor(Math.random() * 1000)),
+        name: registerName || "You",
+        text: body,
+      };
+      setPartyChatMessages((prev) => [...prev.slice(-49), optimMsg]);
+      void api
+        .post(`/api/party-rooms/${activePartyRoom.id}/chat`, { text: body })
+        .then((res: any) => {
+          const data = res?.data ?? res;
+          if (data) applyPartyRoomState(data);
+        })
+        .catch(() => undefined);
     }}
   />
 )}

@@ -410,10 +410,16 @@ export function AudioPartyPage({
 
                       {/* Avatar Image */}
                       <img
-                        src={hostSeat.avatar || room.hostAvatar}
+                        src={hostSeat.avatar || room.hostAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"}
                         alt="Host"
-                        className="w-20 h-20 rounded-full object-cover ring-4 ring-amber-400 shadow-2xl cursor-pointer"
-                        onClick={() => onOpenProfile && onOpenProfile({ name: hostSeat.occupant, avatar: hostSeat.avatar })}
+                        className="w-20 h-20 rounded-full object-cover ring-4 ring-amber-400 shadow-2xl cursor-pointer hover:scale-105 transition-transform"
+                        onClick={() => {
+                          if (onJoinSeat) {
+                            onJoinSeat(0);
+                          } else if (onOpenProfile) {
+                            onOpenProfile({ name: hostSeat.occupant || room.hostName, avatar: hostSeat.avatar || room.hostAvatar });
+                          }
+                        }}
                       />
 
                       {/* Animated Frame */}
@@ -460,10 +466,10 @@ export function AudioPartyPage({
                   >
                     <div
                       onClick={() => {
-                        if (isOccupied) {
-                          setSelectedSeatForMenu(seat);
-                        } else if (onJoinSeat) {
+                        if (onJoinSeat) {
                           onJoinSeat(actualIndex);
+                        } else if (isOccupied) {
+                          setSelectedSeatForMenu({ ...seat, actualIndex });
                         }
                       }}
                       className={`relative w-14 h-14 rounded-full flex items-center justify-center cursor-pointer transition transform active:scale-95 ${
@@ -842,6 +848,84 @@ export function AudioPartyPage({
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ╔═══════════════════════════════════════════════════════════════════╗ */}
+      {/* ║ MODAL 3: SEAT ACTIONS & USER PROFILE MODAL                        ║ */}
+      {/* ╚═══════════════════════════════════════════════════════════════════╝ */}
+      {selectedSeatForMenu && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#120d2b] border border-pink-500/40 rounded-3xl p-5 max-w-xs w-full space-y-4 shadow-2xl relative text-center">
+            <button
+              onClick={() => setSelectedSeatForMenu(null)}
+              className="absolute top-3 right-3 p-1 rounded-full bg-slate-800 text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex flex-col items-center pt-2">
+              <img
+                src={selectedSeatForMenu.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"}
+                alt={selectedSeatForMenu.occupant}
+                className="w-20 h-20 rounded-full object-cover ring-4 ring-pink-500 shadow-xl"
+              />
+              <h3 className="text-base font-black text-white mt-2">
+                {selectedSeatForMenu.occupant || "Guest User"}
+              </h3>
+              <p className="text-xs text-amber-300 font-extrabold mt-0.5">
+                🪙 {(selectedSeatForMenu.coins || 0).toLocaleString()} Coins
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+              <button
+                onClick={() => {
+                  if (onOpenProfile) onOpenProfile(selectedSeatForMenu);
+                  setSelectedSeatForMenu(null);
+                }}
+                className="py-2.5 rounded-xl bg-purple-900/80 hover:bg-purple-800 text-white font-bold border border-purple-400/40"
+              >
+                View Profile
+              </button>
+              <button
+                onClick={() => {
+                  if (onOpenGiftPicker) onOpenGiftPicker(selectedSeatForMenu);
+                  setSelectedSeatForMenu(null);
+                }}
+                className="py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-pink-500 text-white font-bold shadow-lg"
+              >
+                Send Gift 🎁
+              </button>
+            </div>
+
+            {isHost && (
+              <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-white/10">
+                <button
+                  onClick={() => {
+                    if (onMuteSeat && selectedSeatForMenu.actualIndex !== undefined) {
+                      onMuteSeat(selectedSeatForMenu.actualIndex, !selectedSeatForMenu.isMuted);
+                    }
+                    setSelectedSeatForMenu(null);
+                  }}
+                  className="py-2.5 rounded-xl bg-amber-600/80 hover:bg-amber-600 text-white font-bold"
+                >
+                  {selectedSeatForMenu.isMuted ? "Unmute Mic" : "Mute Mic"}
+                </button>
+                <button
+                  onClick={() => {
+                    if (onKickSeat && selectedSeatForMenu.actualIndex !== undefined) {
+                      onKickSeat(selectedSeatForMenu.actualIndex);
+                    }
+                    setSelectedSeatForMenu(null);
+                  }}
+                  className="py-2.5 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white font-bold"
+                >
+                  Kick User 🚫
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
