@@ -15365,8 +15365,8 @@ const [isPartyGiftPopupOpen, setIsPartyGiftPopupOpen] = useState<boolean>(false)
     partyRooms={activePartyRooms}
     partySeats={partySeats}
     isMicMuted={isPartyMicMuted}
-    currentTheme={partyTheme}
-    chatMessages={partyChatMsgs}
+    currentTheme={activePartyThemeImg || undefined}
+    chatMessages={partyChatMessages}
     currentUserId={getCurrentUserId()}
     currentUser={{ name: registerName, avatar: profileAvatarImg }}
     isHost={isActivePartyHost}
@@ -15391,7 +15391,7 @@ const [isPartyGiftPopupOpen, setIsPartyGiftPopupOpen] = useState<boolean>(false)
     onKickSeat={(seatIdx) => handleKickSeat(seatIdx)}
     onOpenGiftPicker={(recipient) => {
       if (recipient) setSelectedPartyGiftRecipient(recipient);
-      setIsGiftPickerOpen(true);
+      setIsPartyGiftPopupOpen(true);
     }}
     onOpenGameLauncher={() => setIsLiveGamesPopupOpen(true)}
     onOpenProfile={(u) => openPartyProfile(u)}
@@ -15400,7 +15400,6 @@ const [isPartyGiftPopupOpen, setIsPartyGiftPopupOpen] = useState<boolean>(false)
         void api.post(`/api/party-rooms/${activePartyRoom.id}/chat`, { text: msg }).catch(() => undefined);
       }
     }}
-    onSelectTheme={(themeUrl) => setPartyTheme(themeUrl)}
   />
 )}
           {/* ╔═══════════════════════════════════════════════════════════════════╗ */}
